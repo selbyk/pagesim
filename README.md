@@ -15,7 +15,11 @@ Algorithms Implemented
 Todo
 - Improve configuration ability
 - Add better paging models than just grabbing random refs/self-defined page ref strings
-- Add a few more algorithms
+- Optimal algorithm
+- Second-chance algorithm
+- Most recently used
+- Most frequently used
+- Compare all other algorithms to Optimal algorithm
 
 I used a linux system library for fun, if someone wants to get
 it running on Macs that'd be awesome.
