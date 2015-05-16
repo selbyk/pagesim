@@ -31,8 +31,7 @@ Todo
  - Ability to record/replay a system's page calls for real-world application testing
 - Learn proper C modularity
 
-I used a linux system library for fun, if someone wants to get
-it running on Macs that'd be awesome.
+Currently tested on Linux and Mac OS X, if someone wants to get it running on Windows that'd be awesome.
 
 Pull requests always welcome. =)
 
