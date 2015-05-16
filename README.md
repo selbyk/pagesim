@@ -14,6 +14,7 @@ Algorithms Implemented
 
 Todo
 - Improve configuration ability
+- Add better paging models than just grabbing random refs/self-defined page ref strings
 - Add a few more algorithms
 
 I used a linux system library for fun, if someone wants to get
