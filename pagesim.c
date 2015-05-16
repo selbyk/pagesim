@@ -51,7 +51,7 @@ size_t num_algos = 0; // Number of algorithms in algos, calculated in init()
 int main ( int argc, char *argv[] )
 {
         init();
-        if ( !(argc >= 3 || argc <= 5) ) /* argc should be 3-5 for correct execution */
+        if ( !(argc >= 3 && argc <= 5) ) /* argc should be 3-5 for correct execution */
                 print_help(argv[0]);
         else
         {
@@ -148,7 +148,8 @@ Algorithm_Data *create_algo_data_store()
         size_t i = 0;
         for (i = 1; i < num_frames; ++i)
         {
-                LIST_INSERT_AFTER(framep, create_empty_frame(i), frames);
+                Frame *insert_frame = create_empty_frame(i);
+                LIST_INSERT_AFTER(framep, insert_frame, frames);
                 framep = framep->frames.le_next;
         }
         return data;
@@ -322,7 +323,7 @@ int print_list(struct Frame *head, const char* index_label, const char* value_la
         printf("\n%-*s: ", labelsize, "Time");
         for (framep = head; framep != NULL; framep = framep->frames.le_next)
         {
-                printf("%*d", colsize, framep->time%200000000);
+                printf("%*d", colsize, (int32_t) (framep->time%200000000));
         }
         printf("\n\n");
         return 0;
@@ -628,11 +629,11 @@ int AGING(Algorithm_Data *data)
  */
 int print_help(const char *binary)
 {
-        printf( "usage: %s algorithm num_frames show_process debug", binary);
-        printf( "   algorithm    - page algorithm to use {LRU, CLOCK}");
-        printf( "   num_frames   - number of page frames {int > 0}");
-        printf( "   show_process - print page table after each ref is processed {1 or 0}");
-        printf( "   debug        - verbose debugging output {1 or 0}");
+        printf( "usage: %s algorithm num_frames show_process debug\n", binary);
+        printf( "   algorithm    - page algorithm to use {LRU, CLOCK}\n");
+        printf( "   num_frames   - number of page frames {int > 0}\n");
+        printf( "   show_process - print page table after each ref is processed {1 or 0}\n");
+        printf( "   debug        - verbose debugging output {1 or 0}\n");
         return 0;
 }
 
