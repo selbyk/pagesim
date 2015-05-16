@@ -14,12 +14,22 @@ Algorithms Implemented
 
 Todo
 - Improve configuration ability
-- Add better paging models than just grabbing random refs/self-defined page ref strings
+ - Configuration File (json parser? or just VAR=meh. I kinda like [jsmn](http://zserge.com/jsmn.html)'s feature set)
+ - Read page calls from file or define in config file (hard coded page refs is no beuno)
 - Optimal algorithm
+ - Generate list of page calls to grab from before running the event loop
+ - Need Look-ahead for page refs
 - Second-chance algorithm
-- Most recently used
-- Most frequently used
-- Compare all other algorithms to Optimal algorithm
+ - Same as CLOCK with no hand?
+ - Guess we can do some list manipulation here to make it more genuine
+- Most recently used (lol, these should be the worst, why even)
+- Most frequently used (lol, these should be the worst, why even)
+- Stat comparing all other algorithms to Optimal algorithm
+- Add better page call models than random
+ - Exponential (call some pages exponentionally more times)
+ - ???
+ - Ability to record/replay a system's page calls for real-world application testing
+- Learn proper C modularity
 
 I used a linux system library for fun, if someone wants to get
 it running on Macs that'd be awesome.
