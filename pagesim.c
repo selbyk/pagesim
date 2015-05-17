@@ -282,60 +282,13 @@ int add_victim(struct Frame_List *victim_list, struct Frame *frame)
 }
 
 /**
- * int print_list()
- *
- * Print list
- *
- * @param head {Frame} head of frame list
- * @param index_label {const char*} label for index frame field
- * @param value_label {const char*} label for value frame field
- *
- * @retun 0
- */
-int print_list(struct Frame *head, const char* index_label, const char* value_label)
-{
-        int colsize = 9, labelsize;
-        struct Frame *framep;
-        // Determine lanbel col size from text
-        if (strlen(value_label) > strlen(index_label))
-                labelsize = strlen(value_label) + 1;
-        else
-                labelsize = strlen(index_label) + 1;
-        /* Forward traversal. */
-        printf("%-*s: ", labelsize, index_label);
-        for (framep = head; framep != NULL; framep = framep->frames.le_next)
-        {
-                printf("%*d", colsize, framep->index);
-        }
-        printf("\n%-*s: ", labelsize, value_label);
-        for (framep = head; framep != NULL; framep = framep->frames.le_next)
-        {
-                if(framep->page == -1)
-                        printf("%*s", colsize, "_");
-                else
-                        printf("%*d", colsize, framep->page);
-        }
-        printf("\n%-*s: ", labelsize, "Extra");
-        for (framep = head; framep != NULL; framep = framep->frames.le_next)
-        {
-                printf("%*d", colsize, framep->extra);
-        }
-        printf("\n%-*s: ", labelsize, "Time");
-        for (framep = head; framep != NULL; framep = framep->frames.le_next)
-        {
-                printf("%*d", colsize, (int32_t) (framep->time%200000000));
-        }
-        printf("\n\n");
-        return 0;
-}
-
-/**
  * int RANDOM(Algorithm_Data *data)
  *
- * @param page_table {Frame_List} page table
- * @param victim_list {Frame_List} victim list
- *
  * RANDOM Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
  */
 int RANDOM(Algorithm_Data *data)
 {
@@ -383,10 +336,11 @@ int RANDOM(Algorithm_Data *data)
 /**
  * int FIFO(Algorithm_Data *data)
  *
- * @param page_table {Frame_List} page table
- * @param victim_list {Frame_List} victim list
- *
  * FIFO Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
  */
 int FIFO(Algorithm_Data *data)
 {
@@ -431,10 +385,11 @@ int FIFO(Algorithm_Data *data)
 /**
  * int LRU(Algorithm_Data *data)
  *
- * @param page_table {Frame_List} page table
- * @param victim_list {Frame_List} victim list
- *
  * LRU Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
  */
 int LRU(Algorithm_Data *data)
 {
@@ -476,10 +431,11 @@ int LRU(Algorithm_Data *data)
 /**
  * int CLOCK(Algorithm_Data *data)
  *
- * @param page_table {Frame_List} page table
- * @param victim_list {Frame_List} victim list
- *
  * CLOCK Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
  */
 int CLOCK(Algorithm_Data *data)
 {
@@ -530,10 +486,11 @@ int CLOCK(Algorithm_Data *data)
 /**
  * int NFU(Algorithm_Data *data)
  *
- * @param page_table {Frame_List} page table
- * @param victim_list {Frame_List} victim list
- *
  * NFU Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
  */
 int NFU(Algorithm_Data *data)
 {
@@ -574,10 +531,11 @@ int NFU(Algorithm_Data *data)
 /**
  * int AGING(Algorithm_Data *data)
  *
- * @param page_table {Frame_List} page table
- * @param victim_list {Frame_List} victim list
- *
  * AGING Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
  */
 int AGING(Algorithm_Data *data)
 {
@@ -661,5 +619,53 @@ int print_summary(Algorithm algo)
         printf("Hits: %d, ", algo.data->hits);
         printf("Misses: %d, ", algo.data->misses);
         printf("Hit Ratio: %f\n", (double)algo.data->hits/(double)(algo.data->hits+algo.data->misses));
+        return 0;
+}
+
+/**
+ * int print_list()
+ *
+ * Print list
+ *
+ * @param head {Frame} head of frame list
+ * @param index_label {const char*} label for index frame field
+ * @param value_label {const char*} label for value frame field
+ *
+ * @retun 0
+ */
+int print_list(struct Frame *head, const char* index_label, const char* value_label)
+{
+        int colsize = 9, labelsize;
+        struct Frame *framep;
+        // Determine lanbel col size from text
+        if (strlen(value_label) > strlen(index_label))
+                labelsize = strlen(value_label) + 1;
+        else
+                labelsize = strlen(index_label) + 1;
+        /* Forward traversal. */
+        printf("%-*s: ", labelsize, index_label);
+        for (framep = head; framep != NULL; framep = framep->frames.le_next)
+        {
+                printf("%*d", colsize, framep->index);
+        }
+        printf("\n%-*s: ", labelsize, value_label);
+        for (framep = head; framep != NULL; framep = framep->frames.le_next)
+        {
+                if(framep->page == -1)
+                        printf("%*s", colsize, "_");
+                else
+                        printf("%*d", colsize, framep->page);
+        }
+        printf("\n%-*s: ", labelsize, "Extra");
+        for (framep = head; framep != NULL; framep = framep->frames.le_next)
+        {
+                printf("%*d", colsize, framep->extra);
+        }
+        printf("\n%-*s: ", labelsize, "Time");
+        for (framep = head; framep != NULL; framep = framep->frames.le_next)
+        {
+                printf("%*d", colsize, (int32_t) (framep->time%200000000));
+        }
+        printf("\n\n");
         return 0;
 }
