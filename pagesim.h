@@ -5,7 +5,16 @@
  * Data structures
  */
 // List for page tables and victim lists
+LIST_HEAD(Page_Ref_List, Page_Ref) page_refs;
+// List for page tables and victim lists
 LIST_HEAD(Frame_List, Frame);
+
+// stuct to hold Frame info
+typedef struct Page_Ref
+{
+        LIST_ENTRY(Page_Ref) pages; // frames node, next
+        int page_num;
+} Page_Ref;
 
 // stuct to hold Frame info
 typedef struct Frame
@@ -26,7 +35,7 @@ typedef struct {
         Frame *last_victim; // Holds last frame used as a victim to make inserting to victim list faster
 } Algorithm_Data;
 
-// an Algorithm 
+// an Algorithm
 typedef struct {
         const char *label; // Algorithm name
         int (*algo)(Algorithm_Data *data); // Pointer to algorithm function
@@ -38,6 +47,8 @@ typedef struct {
  * Init/cleanup functions
  */
 int init(); // init lists and variable, set up config defaults, and load configs
+void gen_page_refs();
+Page_Ref* gen_ref();
 Algorithm_Data *create_algo_data_store(); // returns empty algorithm data
 Frame *create_empty_frame(int index); // returns empty frame
 int cleanup(); // frees allocated memory
@@ -61,6 +72,7 @@ int print_summary(Algorithm algo); // one line summary
 /**
  * Algorithm functions
  */
+int OPTIMAL(Algorithm_Data *data);
 int RANDOM(Algorithm_Data *data);
 int FIFO(Algorithm_Data *data);
 int LRU(Algorithm_Data *data);

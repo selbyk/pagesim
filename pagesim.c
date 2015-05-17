@@ -16,17 +16,17 @@
  * Configuration variables
  */
 int num_frames = 10; // Number of avaliable pages in page tables
+int page_ref_upper_bound = 12; // Largest page reference
+int max_page_calls = 1000; // Max number of page refs to test
+
 int debug = 0; // Debug bool, 1 shows verbose output
 int printrefs = 0; // Print refs bool, 1 shows output after each page ref
-int max_pages = 1000; // Max number of page refs to test
-// Page reference string
-int page_refs[28] = { 0, 1, 2, 3, 2, 4, 5, 3, 4, 1, 6, 3, 7, 8, 7, 8, 4, 9, 7, 8, 1, 2, 9, 5, 4, 5, 0, 2 };
-int num_refs = 28; // Number of page refs in page reference string
 
 /**
  * Array of algorithm functions that can be enabled
  */
-Algorithm algos[6] = { {"RANDOM", &RANDOM, 0, NULL},
+Algorithm algos[7] = { {"OPTIMAL", &OPTIMAL, 0, NULL},
+                       {"RANDOM", &RANDOM, 0, NULL},
                        {"FIFO", &FIFO, 0, NULL},
                        {"LRU", &LRU, 0, NULL},
                        {"CLOCK", &CLOCK, 0, NULL},
@@ -34,11 +34,13 @@ Algorithm algos[6] = { {"RANDOM", &RANDOM, 0, NULL},
                        {"AGING", &AGING, 0, NULL} };
 
 /**
-* Runtime variables, don't touch
-*/
+ * Runtime variables, don't touch
+ */
 int counter = 0; // "Time" as number of loops calling page_refs 0...num_refs (used as i in for loop)
 int last_page_ref = -1; // Last ref
 size_t num_algos = 0; // Number of algorithms in algos, calculated in init()
+int *optimum_find_test;
+int num_refs = 0; // Number of page refs in page_refs list
 
 /**
  * int main(int argc, char *argv[])
@@ -51,12 +53,14 @@ size_t num_algos = 0; // Number of algorithms in algos, calculated in init()
 int main ( int argc, char *argv[] )
 {
         init();
-        if ( !(argc >= 3 && argc <= 5) ) /* argc should be 3-5 for correct execution */
+        if ( !(argc >= 3 && argc <= 5) )
+        { /* argc should be 3-5 for correct execution */
                 print_help(argv[0]);
+        }
         else
         {
                 num_frames = atoi(argv[2]);
-                if ( num_frames < 1 ) /* argc should be 3 for correct execution */
+                if ( num_frames < 1 )
                 {
                         num_frames = 1;
                         printf( "Number of page frames must be at least 1, setting to 1\n");
@@ -64,16 +68,24 @@ int main ( int argc, char *argv[] )
                 if ( argc > 3 )
                 {
                         if(atoi(argv[3]) == 1 || atoi(argv[3]) == 0)
+                        {
                                 printrefs = atoi(argv[3]);
+                        }
                         else
+                        {
                                 printf( "Printrefs must be 1 or 0, ignoring\n");
+                        }
                 }
                 if ( argc > 4 )
                 {
                         if(atoi(argv[4]) == 1 || atoi(argv[3]) == 0)
+                        {
                                 debug = atoi(argv[4]);
+                        }
                         else
+                        {
                                 printf( "Debug must be 1 or 0, ignoring\n");
+                        }
                 }
                 switch(argv[1][0])
                 {
@@ -93,7 +105,9 @@ int main ( int argc, char *argv[] )
                         num_refs = -1;
                         size_t i = 0;
                         for (i = 0; i < num_algos; i++)
+                        {
                                 algos[i].selected = 1;
+                        }
                         break;
                 default:
                         printf( "%s algorithm is invalid choice or not yet implemented\n", argv[1]);
@@ -115,6 +129,7 @@ int main ( int argc, char *argv[] )
  */
 int init()
 {
+        gen_page_refs();
         // Calculate number of algos
         num_algos = sizeof(algos)/sizeof(Algorithm);
         size_t i = 0;
@@ -123,6 +138,66 @@ int init()
                 algos[i].data = create_algo_data_store();
         }
         return 0;
+}
+
+/**
+ * void gen_page_refs()
+ *
+ * Generate all page refs to use in tests
+ *
+ * @return 0
+ */
+void gen_page_refs()
+{
+        num_refs = 0;
+        LIST_INIT(&page_refs);
+        Page_Ref *page = gen_ref();
+        LIST_INSERT_HEAD(&page_refs, page, pages);
+        while(num_refs < max_page_calls)
+        { // generate a page ref up too  max_page_calls and add to list
+                LIST_INSERT_AFTER(page, gen_ref(), pages);
+                page = page->pages.le_next;
+                num_refs++;
+        }
+        // we need look-ahead for Optimal algorithm
+        int all_found = 0;
+        optimum_find_test = (int*)malloc(page_ref_upper_bound*sizeof(int));
+        size_t i;
+        for(i = 0; i < page_ref_upper_bound; ++i)
+        { // generate new refs until one of each have been added to list
+                optimum_find_test[i] = -1;
+        }
+        while(all_found == 0)
+        { // generate new refs until one of each have been added to list
+                LIST_INSERT_AFTER(page, gen_ref(), pages);
+                page = page->pages.le_next;
+                optimum_find_test[page->page_num] = 1;
+                all_found = 1;
+                for(i = 0; i < page_ref_upper_bound; ++i)
+                { // see if we've got them all yet
+                        if(optimum_find_test[i] == -1)
+                        {
+                                all_found = 0;
+                                break;
+                        }
+                }
+                num_refs++;
+        }
+        return;
+}
+
+/**
+ * Page_Ref* gen_ref()
+ *
+ * generate a random page ref within bounds
+ *
+ * @return {Page_Ref*}
+ */
+Page_Ref* gen_ref()
+{
+        Page_Ref *page = malloc(sizeof(Page_Ref));
+        page->page_num = rand() % page_ref_upper_bound;
+        return page;
 }
 
 /**
@@ -148,8 +223,7 @@ Algorithm_Data *create_algo_data_store()
         size_t i = 0;
         for (i = 1; i < num_frames; ++i)
         {
-                Frame *insert_frame = create_empty_frame(i);
-                LIST_INSERT_AFTER(framep, insert_frame, frames);
+                LIST_INSERT_AFTER(framep, create_empty_frame(i), frames);
                 framep = framep->frames.le_next;
         }
         return data;
@@ -183,45 +257,18 @@ Frame* create_empty_frame(int index)
  */
 int event_loop()
 {
-        if(num_refs == -1)
+        counter = 0;
+        while(counter < max_page_calls)
         {
-                time_t stop = time(NULL) + 10;
-                srand(stop);
-                while(counter < max_pages)
-                {
-                        page(get_ref());
-                        usleep(1000);
-                        ++counter;
-                }
+                page(get_ref());
+                ++counter;
         }
-        else
-                while(counter < num_refs && counter < max_pages)
-                        page(page_refs[counter++]);
         size_t i = 0;
         for (i = 0; i < num_algos; i++)
+        {
                 if(algos[i].selected==1) {
                         print_summary(algos[i]);
                 }
-        return 0;
-}
-
-/**
- * int cleanup()
- *
- * Clean up memory
- *
- * @return 0
- */
-int cleanup()
-{
-        size_t i = 0;
-        for (i = 0; i < num_algos; i++)
-        {
-                /* Clean up memory, delete the list */
-                while (algos[i].data->page_table.lh_first != NULL)
-                        LIST_REMOVE(algos[i].data->page_table.lh_first, frames);
-                while (algos[i].data->victim_list.lh_first != NULL)
-                        LIST_REMOVE(algos[i].data->victim_list.lh_first, frames);
         }
         return 0;
 }
@@ -235,7 +282,16 @@ int cleanup()
  */
 int get_ref()
 {
-        return rand() % 12;
+        if (page_refs.lh_first != NULL)
+        { // pop Page_Ref off page_refs
+                int page_num = page_refs.lh_first->page_num;
+                LIST_REMOVE(page_refs.lh_first, pages);
+                return page_num;
+        }
+        else
+        { // just in case
+                return rand() % page_ref_upper_bound;
+        }
 }
 
 /**
@@ -252,11 +308,16 @@ int page(int page_ref)
         last_page_ref = page_ref;
         size_t i = 0;
         for (i = 0; i < num_algos; i++)
+        {
                 if(algos[i].selected==1) {
                         algos[i].algo(algos[i].data);
                         if(printrefs == 1)
+                        {
                                 print_stats(algos[i]);
+                        }
                 }
+        }
+
         return 0;
 }
 
@@ -279,6 +340,83 @@ int add_victim(struct Frame_List *victim_list, struct Frame *frame)
         victim->index = 1;
         LIST_INSERT_HEAD(victim_list, victim, frames);
         return 0;
+}
+
+/**
+ * int OPTIMAL(Algorithm_Data *data)
+ *
+ * OPTIMAL Page Replacement Algorithm
+ *
+ * @param *data {Algorithm_Data} struct holding algorithm data
+ *
+ * return {int} did page fault, 0 or 1
+ */
+int OPTIMAL(Algorithm_Data *data)
+{
+        Frame *framep = data->page_table.lh_first,
+              *victim = NULL;
+        int fault = 0;
+        /* Find target (hit), empty page index (miss), or victim to evict (miss) */
+        while (framep != NULL && framep->page > -1 && framep->page != last_page_ref) {
+                framep = framep->frames.le_next;
+        }
+        if(framep == NULL)
+        { // It's a miss, find our victim
+                size_t i,j;
+                for(i = 0; i < page_ref_upper_bound; ++i)
+                        optimum_find_test[i] = -1;
+                Page_Ref *page = page_refs.lh_first;
+                int all_found = 0;
+                j = 0;
+                //optimum_find_test = malloc(sizeof(int)*page_ref_upper_bound);
+                while(all_found == 0)
+                {
+                        if(optimum_find_test[page->page_num] == -1)
+                                optimum_find_test[page->page_num] = j++;
+                        all_found = 1;
+                        for(i = 0; i < page_ref_upper_bound; ++i)
+                                if(optimum_find_test[i] == -1)
+                                {
+                                        all_found = 0;
+                                        break;
+                                }
+                        page = page->pages.le_next;
+                }
+                framep = data->page_table.lh_first;
+                while (framep != NULL) {
+                        if(victim == NULL || optimum_find_test[framep->page] > optimum_find_test[victim->page])
+                        { // No victim yet or page used further in future than victim
+                                victim = framep;
+                        }
+                        framep = framep->frames.le_next;
+                }
+                if(debug) printf("Victim selected: %d, Page: %d\n", victim->index, victim->page);
+                add_victim(&data->victim_list, victim);
+                victim->page = last_page_ref;
+                time(&victim->time);
+                victim->extra = counter;
+                fault = 1;
+        }
+        else if(framep->page == -1)
+        { // Use free page table index
+                framep->page = last_page_ref;
+                time(&framep->time);
+                framep->extra = counter;
+                fault = 1;
+        }
+        else if(framep->page == last_page_ref)
+        { // The page was found! Hit!
+                time(&framep->time);
+                framep->extra = counter;
+        }
+        if(debug)
+        {
+                printf("Page Ref: %d\n", last_page_ref);
+                for (framep = data->page_table.lh_first; framep != NULL; framep = framep->frames.le_next)
+                        printf("Slot: %d, Page: %d, Time used: %d\n", framep->index, framep->page, framep->extra);
+        }
+        if(fault == 1) data->misses++; else data->hits++;
+        return fault;
 }
 
 /**
@@ -667,5 +805,30 @@ int print_list(struct Frame *head, const char* index_label, const char* value_la
                 printf("%*d", colsize, (int32_t) (framep->time%200000000));
         }
         printf("\n\n");
+        return 0;
+}
+
+/**
+ * int cleanup()
+ *
+ * Clean up memory
+ *
+ * @return 0
+ */
+int cleanup()
+{
+        size_t i = 0;
+        for (i = 0; i < num_algos; i++)
+        {
+                /* Clean up memory, delete the list */
+                while (algos[i].data->page_table.lh_first != NULL)
+                {
+                        LIST_REMOVE(algos[i].data->page_table.lh_first, frames);
+                }
+                while (algos[i].data->victim_list.lh_first != NULL)
+                {
+                        LIST_REMOVE(algos[i].data->victim_list.lh_first, frames);
+                }
+        }
         return 0;
 }
