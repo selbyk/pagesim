@@ -5,6 +5,7 @@ operating systems to manage memory usage.
 This is built upon a programming assignment given in Operating Systems (CSC 4301) at LSU, instructed by Feng Chen.
 
 Algorithms Implemented
+- Optimal
 - Random
 - FIFO
 - LRU
@@ -16,9 +17,9 @@ Todo
 - Improve configuration ability
  - Configuration File (json parser? or just VAR=meh. I kinda like [jsmn](http://zserge.com/jsmn.html)'s feature set)
  - Read page calls from file or define in config file (hard coded page refs is no beuno)
-- Optimal algorithm
- - Generate list of page calls to grab from before running the event loop
- - Need Look-ahead for page refs
+- ~~Optimal algorithm~~
+ - ~~Generate list of page calls to grab from before running the event loop~~
+ - ~~Need Look-ahead for page refs~~
 - Second-chance algorithm
  - Same as CLOCK with no hand?
  - Guess we can do some list manipulation here to make it more genuine
