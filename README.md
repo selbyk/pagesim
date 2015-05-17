@@ -31,7 +31,7 @@ Todo
  - Ability to record/replay a system's page calls for real-world application testing
 - Learn proper C modularity
 
-Currently tested on Linux and Mac OS X, if someone wants to get it running on Windows that'd be awesome.
+Currently tested on Linux, Mac OS X, and [Windows](https://github.com/selbyk/pagesim/issues/2).
 
 Pull requests always welcome. =)
 
